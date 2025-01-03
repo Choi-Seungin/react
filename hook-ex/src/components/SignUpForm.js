@@ -13,10 +13,12 @@ export default function SignUpForm() {
     return (
         <div>
             <h2>회원가입</h2>
+            <form>
             <p><input type="text" placeholder='이름' onChange={e =>setName(e.target.value)}/></p>
             <p><input type="email" placeholder='Email' onChange={e =>setEmail(e.target.value)}/></p>
             <p><input type="password" placeholder='패스워드' onChange={e =>setPassword(e.target.value)}/></p>
             <p><button onClick={signUp}>가입하기</button></p>
+            </form>
         </div>
 
     );
