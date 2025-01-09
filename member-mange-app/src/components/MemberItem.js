@@ -1,3 +1,4 @@
+import axios from "axios";
 function gradeName(grade) {
   switch (grade) {
     case 0:
@@ -16,7 +17,19 @@ function gradeName(grade) {
       return '-';
   }
 }
-export default function MemberItem({ id, username, nickname, grade }) {
+export default function MemberItem({ id, username, nickname, grade, refreshMemberList}) {
+  const deleteMember = () => {
+    if (window.confirm(id + " 사용자를 삭제하시겠습니까?")) {
+      axios.delete("http://localhost:9999/member/delete", {
+        data: { id: id }
+      }).then(res => {
+        console.log(res);
+        //리스트를 최신화
+        refreshMemberList(res.data.list);
+        alert(res.data.msg);
+      }).catch(err => console.log(err));
+    };
+  }
   return (
     <tr>
       <td>{id}</td>
@@ -24,8 +37,7 @@ export default function MemberItem({ id, username, nickname, grade }) {
       <td>{nickname}</td>
       <td>{gradeName(grade)}</td>
       <td>
-        <button className="btn btn-primary">수정</button>
-        <button className="btn btn-danger">삭제</button>
+        <button onClick={() => { deleteMember(id) }}>삭제</button>
       </td>
     </tr>
   );
