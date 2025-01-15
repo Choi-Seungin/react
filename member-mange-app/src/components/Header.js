@@ -7,6 +7,7 @@ export default function Header() {
       <ul>
         <li><Link to="/home">홈</Link></li>
         <li><Link to="/register/view">회원등록</Link></li>
+        <li><Link to="/board/view">게시판</Link></li>
         <li><Link to="/logout">로그아웃</Link></li>
       </ul>
     </nav>

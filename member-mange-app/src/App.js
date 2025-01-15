@@ -5,6 +5,7 @@ import Login from './page/Login';
 import Home from './page/Home';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Register from './page/Register';
+import Board from './page/Board';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login/>}></Route>
           <Route path="/home" element={<Home/>}></Route>
+          <Route path="/board/view" element={<Board/>}></Route>
           <Route path="/register/view" element={<Register/>}></Route>
         </Routes>
       </BrowserRouter>
