@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import './../css/Login.css';
 import axios from 'axios';
+import apiAxios from '../lib/apiAxios';
 import { saveInfo } from '../store/MemberSlice';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -16,7 +17,8 @@ export default function Login() {
       id: id.current.value,
       passwd: pwd.current.value
     }
-    axios.post('http://localhost:9999/member/login', data)
+    apiAxios
+    .post('/member/login', data)
       .then(res => {
         console.log(res.data);
         //로그인 성공하면 Home으로 이동
