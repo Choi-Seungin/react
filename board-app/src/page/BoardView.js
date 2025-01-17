@@ -1,11 +1,11 @@
 import axios from "axios";
-import apiAxios from "../lib/apiAxios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import '../css/main.css';
 import '../css/BoardViewPage.css';
 import { jwtDecode } from "jwt-decode";
+import apiAxios from "../lib/apiAxios";
 
 export default function BoardView() {
   const [data, setData] = useState({});
@@ -20,8 +20,7 @@ export default function BoardView() {
   // axios로 게시글 데이터를 요청해서 받음
 
   useEffect(() => {
-    apiAxios
-    .get(`/board/${bno}`)
+    apiAxios.get(`/board/${bno}`)
       .then(res => {
         console.log(res.data);
         setData(res.data);
@@ -34,9 +33,9 @@ export default function BoardView() {
   }, []);
   const decodeToken = user.token ? jwtDecode(user.token) : '';
 
+  //댓글 더보기
   const moreComment = () => {
-    apiAxios
-    .get(`/board/comment/${bno}`,
+    apiAxios.get(`/board/comment/${bno}`,
       {
         params: { start: commentCount.current }
       }).then(res => {
@@ -46,9 +45,127 @@ export default function BoardView() {
       }).catch(err => console.log(err));
   }
 
-  // 게시글 출력
-  // 첨부파일 목록 출력
-  // 댓글 목록 출력
+  //게시글 좋아요 처리 함수
+  const boardLike = () => {
+    apiAxios.get(`/board/like/${bno}`, {
+      headers: {
+        "Authorization": `Bearer ${user.token}`
+      }
+    })
+      .then(res => {
+        alert(res.data.msg);
+        //좋아요 개수 최신화
+        setBoard({ ...board, blike: res.data.count });
+
+      }).catch(err => console.log(err));
+
+  }
+  //게시글 싫어요 처리 함수
+  const boardHate = () => {
+    apiAxios.get(`/board/hate/${bno}`, {
+      headers: {
+        "Authorization": `Bearer ${user.token}`
+      }
+    })
+      .then(res => {
+        alert(res.data.msg);
+        //좋아요 개수 최신화
+        setBoard({ ...board, bhate: res.data.count });
+
+      }).catch(err => console.log(err));
+
+  }
+
+  //댓글 좋아요/싫어요
+  const commentLikeHate = (e, cno) => {
+    console.log(e.target.className);
+    apiAxios.get(`/board/comment/${e.target.className == 'btn_comment_like' ? 'like' : 'hate'}/${cno}`, {
+      headers: {
+        "Authorization": `Bearer ${user.token}`
+      }
+    })
+      .then(res => {
+        alert(res.data.msg);
+        e.target.querySelector('span').innerHTML = res.data.count;
+      }).catch(err => console.log(err));
+  }
+
+  const commentWrite = () => {
+    const data = {
+      content: commentContent.current.value,
+      bno: bno
+    }
+    apiAxios.post('/board/comment', data, {
+      headers: {
+        "Authorization": `Bearer ${user.token}`
+      }
+    })
+      .then(res => {
+        console.log(res.data);
+        alert(res.data.msg);
+        setCommentList(res.data.commentList);
+        commentContent.current.value = '';
+      }).catch(err => console.log(err));
+  }
+
+  const deleteBoard = () => {
+    apiAxios.delete(`/board/${bno}`, {
+      headers: {
+        "Authorization": `Bearer ${user.token}`
+      }
+    })
+      .then(res => {
+        alert(res.data.msg);
+        if (res.data.code == 1) {
+          navigator('/');
+        }
+      }).catch(err => console.log(err));
+  }
+
+  const onUpdateCommentForm = useCallback((e) => {
+    e.target.parentElement.parentElement.querySelector('.comment_update_form').style.display = 'block';
+    e.target.parentElement.parentElement.querySelector('.comment_content').style.display = 'none';
+  });
+  const offUpdateCommentForm = useCallback((e) => {
+    e.target.parentElement.parentElement.querySelector('.comment_update_form').style.display = 'none';
+    e.target.parentElement.parentElement.querySelector('.comment_content').style.display = 'block';
+  });
+  const commentUpdate = (cno, content, e) => {
+    console.log(cno, content);
+    const data = {
+      cno: cno,
+      content: content
+    };
+    apiAxios.put('/board/comment', data, {
+      headers: {
+        "Authorization": `Bearer ${user.token}`
+      }
+    })
+      .then(res => {
+        console.log(res.data);
+        alert(res.data.msg);
+        setCommentList(res.data.commentList);
+        commentCount.current = res.data.commentList.length + 1;
+        offUpdateCommentForm(e);
+      })
+      .catch(err => console.log(err));
+  };
+
+  const commentDelete = (cno) => {
+    apiAxios.delete(`/board/comment/${cno}`, {
+      headers: {
+        "Authorization": `Bearer ${user.token}`
+      }
+    }).then(res => {
+      console.log(res.data);
+      alert(res.data.msg);
+      setCommentList(res.data.commentList);
+    }).catch(err => {
+      console.log(err);
+    })
+  }
+
+
 
   return (
     <div id="board_view_container">
@@ -78,8 +195,12 @@ export default function BoardView() {
           </tr>
           <tr>
             <td colSpan="2">
-              <a href="#" id="btn_like" >좋아요 : <span id="like_count">{board.blike}</span> </a>
-              <a href="#" id="btn_hate">싫어요 : <span id="hate_count">{board.bhate}</span> </a>
+              <a href="#" id="btn_like" onClick={boardLike}>좋아요 : <span id="like_count">{board.blike}</span> </a>
+              <a href="#" id="btn_hate" onClick={boardHate}>싫어요 : <span id="hate_count">{board.bhate}</span> </a>
+              {
+                decodeToken.sub === board.id &&
+                <button type="button" id="btn_comment_delete" onClick={deleteBoard}>글 삭제</button>
+              }
             </td>
           </tr>
 
@@ -90,8 +211,8 @@ export default function BoardView() {
                 user.token == null ? <div className="comment_form">
                   <p>로그인 후 작성가능</p>
                 </div> : <div className="comment_form">
-                  <textarea name="content" placeholder="댓글을 입력하세요"></textarea>
-                  <button type="button"  >댓글작성</button>
+                  <textarea name="content" ref={commentContent} placeholder="댓글을 입력하세요"></textarea>
+                  <button type="button" onClick={commentWrite} >댓글작성</button>
                 </div>
               }
             </td>
@@ -119,14 +240,21 @@ export default function BoardView() {
               <input type="hidden" name="cno" value={comment.cno} />
               <span>{comment.id}</span>
               <span>작성일 : {comment.cdate}</span>
-              <span><a href="#" className="btn_comment_like">좋아요 : <span>{comment.clike}</span></a></span>
-              <span><a href="#" className="btn_comment_hate">싫어요 : <span>{comment.chate}</span></a></span>
+              <span><a href="#" className="btn_comment_like" onClick={(e) => commentLikeHate(e, comment.cno)}>좋아요 : <span>{comment.clike}</span></a></span>
+              <span><a href="#" className="btn_comment_hate" onClick={(e) => commentLikeHate(e, comment.cno)}>싫어요 : <span>{comment.chate}</span></a></span>
               {
-                decodeToken.sub === comment.id && <><button type="button" className="btn_comment_delete">댓글 삭제</button><button type="button" className="btn_comment_update">댓글 수정</button></>
+                decodeToken.sub === comment.id && <><button type="button" className="btn_comment_delete" onClick={() => commentDelete(comment.cno)}>댓글 삭제</button>
+                  <button type="button" className="btn_comment_update" onClick={onUpdateCommentForm}>댓글 수정</button></>
               }
             </p>
-            <p>{comment.content}</p>
-
+            <p className="comment_content" style={{ display: 'block' }}>{comment.content}</p>
+            {
+              decodeToken.sub === comment.id && <p className="comment_update_form" style={{ display: 'none' }}>
+                <textarea defaultValue={comment.content}></textarea>
+                <button type="button" onClick={(e) => { commentUpdate(comment.cno, e.target.previousSibling.value, e); }}>수정</button>
+                <button type="button" onClick={offUpdateCommentForm}>취소</button>
+              </p>
+            }
           </div>
           )};
       </div>

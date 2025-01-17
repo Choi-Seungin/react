@@ -10,7 +10,7 @@ const apiAxios = axios.create({
 //요청 인터셉터 추가
 apiAxios.interceptors.request.use(
   (config) => {
-    console.log('request');
+    console.log('request')
     //요청 전처리 부분
     console.log(config.method.toUpperCase(), ' - ', config.url);
     return config;
@@ -25,12 +25,13 @@ apiAxios.interceptors.request.use(
 //응답 인터셉터 추가
 apiAxios.interceptors.response.use(
   (response) => {
-    console.log('response');
     //응답 전처리 부분
+    console.log('reponse')
+    console.log(response.data);
     console.log(response.config.method.toUpperCase(), ' - ', response.config.url);
     return response;
   },
-  (error) => {
+  (error) => {  
     //응답에 에러가 발생했을때 처리부분
     console.log(error)
     return Promise.reject(error);
